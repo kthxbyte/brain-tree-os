@@ -230,11 +230,11 @@ export function BrainLayout({
               <ConnectionStatusIndicator status={connectionStatus} brainStatus={isDemo ? undefined : brainStatus} isStreaming={isStreaming} fileCount={(isStreaming || isBuilding) ? files.length : undefined} />
             </div>
           )}
-          {activeTabId === 'graph' && isBuilding ? (
+          {activeTabId === 'graph' && isBuilding && files.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center gap-2">
               <BrainLoader />
               <p className="mt-2 text-[14px] font-medium text-text-secondary">Your brain is being built...</p>
-              <p className="text-[12px] text-text-muted">{files.length} files created so far. Watching for changes.</p>
+              <p className="text-[12px] text-text-muted">Waiting for files... Watching for changes.</p>
             </div>
           ) : activeTabId === 'graph' ? (
             <GraphView files={files} links={links} onSelectFile={openFileTab} />
