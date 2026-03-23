@@ -7,12 +7,15 @@ import { parseExecutionPlan, isExecutionPlanFile } from './execution-plan-parser
 
 // ── Types ────────────────────────────────────────────
 
+export type BrainStatus = 'building' | 'live' | 'error'
+
 export interface LocalBrain {
   id: string
   name: string
   description: string
   path: string
   createdAt: string
+  status?: BrainStatus
 }
 
 export interface BrainFile {
@@ -28,6 +31,7 @@ export interface BrainLink {
 export interface ExecutionStep {
   id: string
   phase_number: number
+  phase_title: string
   step_number: number
   title: string
   status: 'not_started' | 'in_progress' | 'completed' | 'blocked'
@@ -110,6 +114,15 @@ export function getBrain(brainId: string): LocalBrain | null {
   return config.brains.find((b) => b.id === brainId) ?? null
 }
 
+export function updateBrainStatus(brainId: string, status: BrainStatus): boolean {
+  const config = readBrainsConfig()
+  const brain = config.brains.find((b) => b.id === brainId)
+  if (!brain) return false
+  brain.status = status
+  writeBrainsConfig(config)
+  return true
+}
+
 // ── File scanning ────────────────────────────────────
 
 function generateFileId(filePath: string): string {
@@ -188,6 +201,7 @@ export function getExecutionSteps(brainPath: string, files: BrainFile[]): Execut
     return parsed.map((step, idx) => ({
       id: `step-${idx}`,
       phase_number: step.phase,
+      phase_title: step.phaseTitle,
       step_number: Number(step.stepNumber),
       title: step.title,
       status: step.status as ExecutionStep['status'],
@@ -272,6 +286,16 @@ export function readBrainFile(brainPath: string, filePath: string): string {
   }
 
   return fs.readFileSync(resolved, 'utf8')
+}
+
+export function writeBrainFile(brainPath: string, filePath: string, content: string): void {
+  // Security: ensure the file is within the brain directory
+  const resolved = path.resolve(brainPath, filePath)
+  if (!resolved.startsWith(path.resolve(brainPath))) {
+    throw new Error('Path traversal detected')
+  }
+
+  fs.writeFileSync(resolved, content, 'utf8')
 }
 
 // ── Demo brain path ──────────────────────────────────

@@ -68,9 +68,12 @@ Register the brain in `~/.braintree-os/brains.json`. Use Bash to check if the fi
   "name": "<brain-name>",
   "description": "<description>",
   "path": "<absolute-path-to-brain-root>",
-  "created": "<ISO-date>"
+  "created": "<ISO-date>",
+  "status": "building"
 }
 ```
+
+**IMPORTANT**: The `"status": "building"` field tells the brain viewer to show a "Building" indicator instead of "Live". You MUST update this to `"live"` at the end of the build (Phase 6).
 
 ### Step 4: Show the live viewer URL
 
@@ -483,15 +486,35 @@ You can also point an agent here directly: "analyze the mockup in Assets/homepag
 Use descriptive names: competitor-pricing-screenshot.png not IMG_4521.png
 ```
 
-### Step 6: Create Execution Plan or Working Rhythms
+### Step 6: Create Execution Plan (ALWAYS — at root level)
 
-If the user is building something with clear phases (product, project, course), create `Execution-Plan/Execution-Plan.md` with:
+ALWAYS create `Execution-Plan.md` at the brain ROOT (not inside a subfolder). Every brain needs an execution plan, even if you don't have enough information yet. Create the best plan you can with what you know. The user will refine it over time through `/resume-braintree` and `/wrap-up-braintree` sessions.
+
+Create `Execution-Plan.md` (root level) with:
 - Start with `> Part of [[BRAIN-INDEX]]`
-- Numbered phases with milestones
-- Steps with: step ID, title, description, status (not_started), dependencies
-- Parallel groups where applicable
+- A brief overview of what the plan covers
+- Numbered phases with descriptive titles
+- Each phase has a markdown table with columns: `| Step | Task | Status | Dependencies | Details |`
+- Status values: `not_started`, `in_progress`, `done`, `blocked`
+- Acceptance criteria per phase (what "done" looks like)
 
-If the brain is ongoing/operational, create `Working-Rhythms.md` with:
+The execution plan powers the right-side panel in the brain viewer. It MUST use the table format with `Step` and `Task` columns so the parser can display it. Example:
+
+```markdown
+## Phase 1: Foundation (Weeks 1-2)
+
+**Goal**: Set up the basics and validate the approach.
+
+| Step | Task | Status | Dependencies | Details |
+|------|------|--------|--------------|---------|
+| 1.1 | Define core concept | not_started | None | Clarify the vision and scope |
+| 1.2 | Research competitors | not_started | 1.1 | Analyze 3-5 alternatives |
+| 1.3 | Set up project structure | not_started | 1.1 | Initialize repo and tooling |
+```
+
+If the brain is ongoing/operational (not a build project), still create the execution plan but frame it as milestones and goals rather than build phases. Every brain benefits from visible progress tracking.
+
+Additionally, if the brain is ongoing/operational, ALSO create `Working-Rhythms.md` with:
 - Start with `> Part of [[BRAIN-INDEX]]`
 - Daily/weekly/monthly recurring workflows
 - Review cadences
@@ -539,6 +562,26 @@ This is the most important step. Go back and UPDATE `BRAIN-INDEX.md` using Edit 
 **Zero floating nodes.** Every file must have a wikilink path back to BRAIN-INDEX through this chain: BRAIN-INDEX -> Folder Index -> Content File. Double-check before moving on.
 
 ## Phase 6: You're All Set
+
+### Step 1: Update brain status to "live"
+
+Update the brain's status in `~/.braintree-os/brains.json` from `"building"` to `"live"`. Use Bash to read the file, find the brain entry by ID, change the status field, and write it back. This makes the brain viewer switch from the "Building" indicator to "Live".
+
+```bash
+python3 -c "
+import json
+with open('$HOME/.braintree-os/brains.json', 'r') as f:
+    config = json.load(f)
+for b in config['brains']:
+    if b['id'] == '<BRAIN_ID>':
+        b['status'] = 'live'
+with open('$HOME/.braintree-os/brains.json', 'w') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+"
+```
+
+### Step 2: Present summary
 
 Present a warm, concise summary:
 - Show what was created (folder count, files, agents)

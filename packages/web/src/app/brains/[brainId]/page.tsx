@@ -7,6 +7,7 @@ async function getBrainData(brainId: string) {
   let brainPath: string
   let brainName: string
   let brainDescription: string
+  let brainStatus: string | undefined
   let isDemo = false
 
   if (brainId === 'demo') {
@@ -20,6 +21,7 @@ async function getBrainData(brainId: string) {
     brainPath = brain.path
     brainName = brain.name
     brainDescription = brain.description
+    brainStatus = brain.status
   }
 
   const files = scanBrainFiles(brainPath)
@@ -28,7 +30,7 @@ async function getBrainData(brainId: string) {
   const handoffs = getHandoffs(brainPath, files)
 
   return {
-    brain: { id: brainId, name: brainName, description: brainDescription, is_demo: isDemo },
+    brain: { id: brainId, name: brainName, description: brainDescription, is_demo: isDemo, status: brainStatus },
     files,
     links,
     executionSteps,
@@ -67,6 +69,7 @@ export default async function BrainPage({ params }: { params: Promise<{ brainId:
         isDemo={brain.is_demo ?? false}
         brainName={brain.name}
         brainDescription={brain.description ?? ''}
+        brainStatus={(brain.status as 'building' | 'live' | 'error') ?? 'live'}
       />
     </div>
   )

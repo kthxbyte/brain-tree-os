@@ -1,14 +1,31 @@
 'use client';
 
-import { useMemo, useRef } from 'react';
-import { Copy } from 'lucide-react';
+import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { Copy, Pencil, Eye, Save, Loader2 } from 'lucide-react';
 import { useContextMenu } from '@/hooks/use-context-menu';
 import { ContextMenu, type ContextMenuItem } from '@/components/ui/context-menu';
+
+const CodeMirrorEditor = dynamic(() => import('./codemirror-editor'), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-full items-center justify-center">
+      <div className="flex items-center gap-2 text-[13px] text-text-muted">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading editor...
+      </div>
+    </div>
+  ),
+});
 
 interface FileViewerProps {
   content: string;
   filePath: string;
   onWikilinkClick: (targetPath: string) => void;
+  brainId: string;
+  isOwner: boolean;
+  filePaths: string[];
+  onContentChange?: (newContent: string) => void;
 }
 
 interface Frontmatter {
@@ -24,7 +41,7 @@ function parseFrontmatter(raw: string): { frontmatter: Frontmatter | null; body:
     const idx = line.indexOf(':');
     if (idx === -1) continue;
     const key = line.slice(0, idx).trim();
-    const val = line.slice(idx + 1).trim();
+    let val = line.slice(idx + 1).trim();
     // Parse YAML arrays: [a, b, c]
     if (val.startsWith('[') && val.endsWith(']')) {
       fm[key] = val
@@ -506,10 +523,27 @@ export default function FileViewer({
   content,
   filePath,
   onWikilinkClick,
+  brainId,
+  isOwner,
+  filePaths,
+  onContentChange,
 }: FileViewerProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editContent, setEditContent] = useState(content);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Reset edit state when file changes
+  useEffect(() => {
+    setIsEditing(false);
+    setEditContent(content);
+    setSaveStatus('idle');
+  }, [filePath, content]);
+
   const { frontmatter, body } = useMemo(
-    () => parseFrontmatter(content),
-    [content]
+    () => parseFrontmatter(isEditing ? editContent : content),
+    [isEditing, editContent, content]
   );
 
   const selectedTextRef = useRef('');
@@ -530,22 +564,149 @@ export default function FileViewer({
     ];
   }, [ctxMenu.state.context]);
 
+  const saveFile = useCallback(async (newContent: string) => {
+    setSaveStatus('saving');
+    setIsSaving(true);
+    try {
+      const res = await fetch(`/api/brain-file/${brainId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath, content: newContent }),
+      });
+      if (res.ok) {
+        setSaveStatus('saved');
+        onContentChange?.(newContent);
+        // Reset to idle after a moment
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        setSaveStatus('error');
+        setTimeout(() => setSaveStatus('idle'), 3000);
+      }
+    } catch {
+      setSaveStatus('error');
+      setTimeout(() => setSaveStatus('idle'), 3000);
+    }
+    setIsSaving(false);
+  }, [brainId, filePath, onContentChange]);
+
+  const handleEditorChange = useCallback((value: string) => {
+    setEditContent(value);
+    // Auto-save with debounce (1.5s)
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      saveFile(value);
+    }, 1500);
+  }, [saveFile]);
+
+  const handleManualSave = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    saveFile(editContent);
+  }, [saveFile, editContent]);
+
+  const toggleEdit = useCallback(() => {
+    if (isEditing) {
+      // Switching to read mode, save any pending changes
+      if (debounceRef.current) {
+        clearTimeout(debounceRef.current);
+        saveFile(editContent);
+      }
+    } else {
+      setEditContent(content);
+    }
+    setIsEditing(!isEditing);
+  }, [isEditing, editContent, content, saveFile]);
+
   return (
     <div
-      className="mx-auto w-full max-w-3xl px-6 pb-16 pt-6"
+      className="flex h-full flex-col"
       onContextMenu={(e) => {
+        if (isEditing) return;
         const sel = window.getSelection();
         selectedTextRef.current = sel?.toString().trim() ?? '';
         ctxMenu.open(e, { selectedText: selectedTextRef.current }, 1);
       }}
     >
-      <p className="mb-4 text-[11px] font-mono text-text-muted">{filePath}</p>
-      {frontmatter && <FrontmatterDisplay fm={frontmatter} />}
-      <div className="prose-sm">
-        <MarkdownRenderer body={body} onWikilinkClick={onWikilinkClick} />
+      {/* Toolbar */}
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-4 py-1.5 sm:px-6">
+        <p className="text-[11px] font-mono text-text-muted truncate">{filePath}</p>
+        <div className="flex items-center gap-2">
+          {/* Save status indicator */}
+          {isEditing && saveStatus !== 'idle' && (
+            <span className={`text-[11px] ${
+              saveStatus === 'saving' ? 'text-text-muted' :
+              saveStatus === 'saved' ? 'text-leaf' :
+              'text-berry'
+            }`}>
+              {saveStatus === 'saving' ? 'Saving...' :
+               saveStatus === 'saved' ? 'Saved' :
+               'Save failed'}
+            </span>
+          )}
+
+          {/* Manual save button (visible in edit mode) */}
+          {isEditing && (
+            <button
+              onClick={handleManualSave}
+              disabled={isSaving}
+              className="flex items-center gap-1 rounded px-2 py-1 text-[11px] text-text-muted transition-colors hover:bg-text/5 hover:text-text-secondary disabled:opacity-50"
+              title="Save (Cmd+S)"
+            >
+              {isSaving ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Save className="h-3.5 w-3.5" />
+              )}
+            </button>
+          )}
+
+          {/* Edit/Read toggle */}
+          {isOwner && (
+            <button
+              onClick={toggleEdit}
+              className={`flex items-center gap-1.5 rounded px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                isEditing
+                  ? 'bg-leaf/10 text-leaf hover:bg-leaf/15'
+                  : 'text-text-muted hover:bg-text/5 hover:text-text-secondary'
+              }`}
+            >
+              {isEditing ? (
+                <>
+                  <Eye className="h-3.5 w-3.5" />
+                  Read
+                </>
+              ) : (
+                <>
+                  <Pencil className="h-3.5 w-3.5" />
+                  Edit
+                </>
+              )}
+            </button>
+          )}
+        </div>
       </div>
 
-      {ctxMenu.state.isOpen && (
+      {/* Content area */}
+      {isEditing ? (
+        <div className="flex-1 overflow-hidden">
+          <CodeMirrorEditor
+            content={editContent}
+            onChange={handleEditorChange}
+            onSave={handleManualSave}
+            filePaths={filePaths}
+          />
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-3xl px-6 pb-16 pt-6">
+            {frontmatter && <FrontmatterDisplay fm={frontmatter} />}
+            <div className="prose-sm">
+              <MarkdownRenderer body={body} onWikilinkClick={onWikilinkClick} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {!isEditing && ctxMenu.state.isOpen && (
         <ContextMenu
           ref={ctxMenu.menuRef}
           items={contextMenuItems}
