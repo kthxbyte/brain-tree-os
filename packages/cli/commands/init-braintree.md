@@ -68,9 +68,12 @@ Register the brain in `~/.braintree-os/brains.json`. Use Bash to check if the fi
   "name": "<brain-name>",
   "description": "<description>",
   "path": "<absolute-path-to-brain-root>",
-  "created": "<ISO-date>"
+  "created": "<ISO-date>",
+  "status": "building"
 }
 ```
+
+**IMPORTANT**: The `"status": "building"` field tells the brain viewer to show a "Building" indicator instead of "Live". You MUST update this to `"live"` at the end of the build (Phase 6).
 
 ### Step 4: Show the live viewer URL
 
@@ -559,6 +562,26 @@ This is the most important step. Go back and UPDATE `BRAIN-INDEX.md` using Edit 
 **Zero floating nodes.** Every file must have a wikilink path back to BRAIN-INDEX through this chain: BRAIN-INDEX -> Folder Index -> Content File. Double-check before moving on.
 
 ## Phase 6: You're All Set
+
+### Step 1: Update brain status to "live"
+
+Update the brain's status in `~/.braintree-os/brains.json` from `"building"` to `"live"`. Use Bash to read the file, find the brain entry by ID, change the status field, and write it back. This makes the brain viewer switch from the "Building" indicator to "Live".
+
+```bash
+python3 -c "
+import json
+with open('$HOME/.braintree-os/brains.json', 'r') as f:
+    config = json.load(f)
+for b in config['brains']:
+    if b['id'] == '<BRAIN_ID>':
+        b['status'] = 'live'
+with open('$HOME/.braintree-os/brains.json', 'w') as f:
+    json.dump(config, f, indent=2)
+    f.write('\n')
+"
+```
+
+### Step 2: Present summary
 
 Present a warm, concise summary:
 - Show what was created (folder count, files, agents)

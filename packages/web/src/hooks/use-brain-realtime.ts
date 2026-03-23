@@ -15,6 +15,7 @@ interface Handoff {
 }
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected' | 'error'
+export type BrainStatus = 'building' | 'live' | 'error'
 
 interface InitialData {
   files: BrainFile[]
@@ -29,19 +30,22 @@ interface UseBrainRealtimeReturn {
   executionSteps: ExecutionStep[]
   handoffs: Handoff[]
   connectionStatus: ConnectionStatus
+  brainStatus: BrainStatus | undefined
   isStreaming: boolean
   optimisticUpdateStep: (stepId: string, status: ExecutionStep['status']) => void
 }
 
 export function useBrainRealtime(
   brainId: string,
-  initialData: InitialData
+  initialData: InitialData,
+  initialBrainStatus?: BrainStatus
 ): UseBrainRealtimeReturn {
   const [files, setFiles] = useState<BrainFile[]>(initialData.files)
   const [links, setLinks] = useState<BrainLink[]>(initialData.links)
   const [executionSteps, setExecutionSteps] = useState<ExecutionStep[]>(initialData.executionSteps)
   const [handoffs, setHandoffs] = useState<Handoff[]>(initialData.handoffs)
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected')
+  const [brainStatus, setBrainStatus] = useState<BrainStatus | undefined>(initialBrainStatus)
   const [isStreaming, setIsStreaming] = useState(false)
   const wsRef = useRef<WebSocket | null>(null)
   const streamTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -70,6 +74,7 @@ export function useBrainRealtime(
         if (msg.type === 'links') setLinks(msg.data)
         if (msg.type === 'execution_steps') setExecutionSteps(msg.data)
         if (msg.type === 'handoffs') setHandoffs(msg.data)
+        if (msg.type === 'brain-status') setBrainStatus(msg.status)
 
         // Also handle full-update for backwards compatibility
         if (msg.type === 'full-update') {
@@ -120,5 +125,5 @@ export function useBrainRealtime(
     []
   )
 
-  return { files, links, executionSteps, handoffs, connectionStatus, isStreaming, optimisticUpdateStep }
+  return { files, links, executionSteps, handoffs, connectionStatus, brainStatus, isStreaming, optimisticUpdateStep }
 }

@@ -38,10 +38,13 @@ interface Handoff {
   duration_seconds: number | null; summary: string; file_path: string;
 }
 
+type BrainStatus = 'building' | 'live' | 'error';
+
 interface BrainLayoutProps {
   brainId: string; files: BrainFile[]; links: BrainLink[];
   executionSteps: ExecutionStep[]; handoffs: Handoff[];
   isDemo?: boolean; brainName?: string; brainDescription?: string;
+  brainStatus?: BrainStatus;
 }
 
 const GRAPH_TAB: Tab = { id: 'graph', label: 'Graph View' };
@@ -50,21 +53,23 @@ export function BrainLayout({
   brainId, files: initialFiles, links: initialLinks,
   executionSteps: initialSteps, handoffs: initialHandoffs,
   isDemo = false, brainName = '', brainDescription = '',
+  brainStatus: initialBrainStatus,
 }: BrainLayoutProps) {
   const initialData = useMemo(() => ({
     files: initialFiles, links: initialLinks,
     executionSteps: initialSteps, handoffs: initialHandoffs,
   }), [initialFiles, initialLinks, initialSteps, initialHandoffs]);
 
-  const { files, links, executionSteps, handoffs, connectionStatus, isStreaming, optimisticUpdateStep } =
-    useBrainRealtime(brainId, initialData);
+  const { files, links, executionSteps, handoffs, connectionStatus, isStreaming, brainStatus: realtimeBrainStatus, optimisticUpdateStep } =
+    useBrainRealtime(brainId, initialData, initialBrainStatus);
 
   // Brain chat (only for non-demo brains)
   const chat = useBrainChat(brainId);
   const [chatOpen, setChatOpen] = useState(false);
 
-  // Brain is "building" when it has very few files (init-braintree is running)
-  const isBuilding = !isDemo && files.length > 0 && files.length < 5;
+  // Use realtime status (updates from watcher), fallback to initial
+  const brainStatus = realtimeBrainStatus ?? initialBrainStatus ?? 'live';
+  const isBuilding = !isDemo && brainStatus === 'building';
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [rightPaneOpen, setRightPaneOpen] = useState(false);
@@ -222,7 +227,7 @@ export function BrainLayout({
                   departmentCount={new Set(files.filter((f) => f.path.includes('/')).map((f) => f.path.split('/')[0])).size}
                   linkCount={links.length} files={files} links={links} />
               )}
-              <ConnectionStatusIndicator status={connectionStatus} isStreaming={isStreaming} fileCount={isStreaming ? files.length : undefined} />
+              <ConnectionStatusIndicator status={connectionStatus} brainStatus={isDemo ? undefined : brainStatus} isStreaming={isStreaming} fileCount={(isStreaming || isBuilding) ? files.length : undefined} />
             </div>
           )}
           {activeTabId === 'graph' && isBuilding ? (

@@ -7,12 +7,15 @@ import { parseExecutionPlan, isExecutionPlanFile } from './execution-plan-parser
 
 // ── Types ────────────────────────────────────────────
 
+export type BrainStatus = 'building' | 'live' | 'error'
+
 export interface LocalBrain {
   id: string
   name: string
   description: string
   path: string
   createdAt: string
+  status?: BrainStatus
 }
 
 export interface BrainFile {
@@ -109,6 +112,15 @@ export function listBrains(): LocalBrain[] {
 export function getBrain(brainId: string): LocalBrain | null {
   const config = readBrainsConfig()
   return config.brains.find((b) => b.id === brainId) ?? null
+}
+
+export function updateBrainStatus(brainId: string, status: BrainStatus): boolean {
+  const config = readBrainsConfig()
+  const brain = config.brains.find((b) => b.id === brainId)
+  if (!brain) return false
+  brain.status = status
+  writeBrainsConfig(config)
+  return true
 }
 
 // ── File scanning ────────────────────────────────────

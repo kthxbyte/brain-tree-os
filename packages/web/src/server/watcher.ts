@@ -8,6 +8,7 @@ import {
   getHandoffs,
   DEMO_BRAIN,
   getDemoBrainPath,
+  type BrainStatus,
 } from '../lib/local-data'
 import { isExecutionPlanFile } from '../lib/execution-plan-parser'
 
@@ -28,6 +29,7 @@ export function startWatcher(brainId: string, ws: WebSocket): WatcherHandle {
 
   const brainPath = brain.path
   let debounceTimer: NodeJS.Timeout | null = null
+  let lastStatus: BrainStatus | undefined = brain.status
 
   const watcher = chokidar.watch(brainPath, {
     ignored: [
@@ -48,6 +50,15 @@ export function startWatcher(brainId: string, ws: WebSocket): WatcherHandle {
         if (ws.readyState !== WebSocket.OPEN) return
 
         const files = scanBrainFiles(brainPath)
+
+        // Check if brain status changed (re-read from registry)
+        if (brainId !== 'demo') {
+          const freshBrain = getBrain(brainId)
+          if (freshBrain?.status && freshBrain.status !== lastStatus) {
+            lastStatus = freshBrain.status
+            ws.send(JSON.stringify({ type: 'brain-status', status: freshBrain.status }))
+          }
+        }
 
         // Always send files update
         ws.send(JSON.stringify({ type: 'files', data: files }))
