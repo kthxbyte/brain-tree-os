@@ -3,14 +3,61 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as os from 'node:os'
+import * as crypto from 'node:crypto'
 import { spawn } from 'node:child_process'
 import * as net from 'node:net'
 
 const CONFIG_DIR = path.join(os.homedir(), '.braintree-os')
-const COMMANDS_DIR = path.join(os.homedir(), '.claude', 'commands')
+const COMMANDS_DIR = (() => {
+  const openclaudeDir = path.join(os.homedir(), '.openclaude', 'commands')
+  const claudeDir = path.join(os.homedir(), '.claude', 'commands')
+  return fs.existsSync(path.join(os.homedir(), '.openclaude')) ? openclaudeDir : claudeDir
+})()
 const SERVER_JSON = path.join(CONFIG_DIR, 'server.json')
 
 const VERSION = '0.1.0'
+
+function findBrain() {
+  let dir = process.cwd()
+  const root = path.parse(dir).root
+  while (dir !== root) {
+    if (fs.existsSync(path.join(dir, '.braintree', 'brain.json'))) {
+      console.log(`FOUND:${dir}`)
+      return
+    }
+    if (fs.existsSync(path.join(dir, 'BRAIN-INDEX.md'))) {
+      console.log(`FOUND:${dir}`)
+      return
+    }
+    const parent = path.dirname(dir)
+    if (parent === dir) break
+    dir = parent
+  }
+}
+
+function formatNow(short = false): string {
+  const now = new Date()
+  const date = now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
+  if (short) return date
+  const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true })
+  return `${date} at ${time}`
+}
+
+function registrySet(brainId: string, key: string, value: string) {
+  const registryPath = path.join(os.homedir(), '.braintree-os', 'brains.json')
+  if (!fs.existsSync(registryPath)) {
+    process.stderr.write(`Registry not found: ${registryPath}\n`)
+    process.exit(1)
+  }
+  const config = JSON.parse(fs.readFileSync(registryPath, 'utf8'))
+  const brain = config.brains.find((b: any) => b.id === brainId)
+  if (!brain) {
+    process.stderr.write(`Brain not found: ${brainId}\n`)
+    process.exit(1)
+  }
+  brain[key] = value
+  fs.writeFileSync(registryPath, JSON.stringify(config, null, 2) + '\n')
+}
 
 function ensureConfigDir() {
   fs.mkdirSync(CONFIG_DIR, { recursive: true })
@@ -81,7 +128,7 @@ function showWelcome(port: number, commandCount: number) {
   console.log('')
   console.log(`  BrainTree OS v${VERSION}`)
   console.log('')
-  console.log(`  > ${commandCount} commands installed to ~/.claude/commands/`)
+  console.log(`  > ${commandCount} commands installed to ${COMMANDS_DIR}`)
   console.log(`  > Server running at ${url}`)
   console.log('')
   console.log('  +-----------------------------------------------------+')
@@ -140,6 +187,12 @@ function showStatus() {
 
 async function main() {
   const args = process.argv.slice(2)
+
+  if (args[0] === 'find-brain') { findBrain(); return }
+  if (args[0] === 'uuid') { console.log(crypto.randomUUID()); return }
+  if (args[0] === 'now') { console.log(formatNow(args.includes('--short'))); return }
+  if (args[0] === 'home') { console.log(os.homedir()); return }
+  if (args[0] === 'registry-set') { registrySet(args[1], args[2], args[3]); return }
 
   if (args.includes('help') || args.includes('--help') || args.includes('-h')) {
     showHelp()

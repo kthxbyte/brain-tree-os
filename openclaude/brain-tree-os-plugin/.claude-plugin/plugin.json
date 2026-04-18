@@ -1,0 +1,9 @@
+{
+  "name": "brain-tree-os",
+  "description": "BrainTree OS — knowledge management commands for Claude and OpenClaude. Provides session resume, wrap-up, status, planning, sprint, sync, init, and feature commands.",
+  "version": "1.0.0",
+  "author": {
+    "name": "Salvador Munoz",
+    "email": "salvador.munoz@gmail.com"
+  }
+}
