@@ -61,6 +61,67 @@ function registrySet(brainId: string, key: string, value: string) {
   fs.writeFileSync(registryPath, JSON.stringify(config, null, 2) + '\n')
 }
 
+function recoverBrain(scanPath: string) {
+  const targetPath = scanPath || process.cwd()
+
+  if (!fs.existsSync(targetPath)) {
+    process.stderr.write(`Path not found: ${targetPath}\n`)
+    process.exit(1)
+  }
+
+  const brainJsonPath = path.join(targetPath, '.braintree', 'brain.json')
+  const brainIndexPath = path.join(targetPath, 'BRAIN-INDEX.md')
+
+  let brainData: any = null
+
+  if (fs.existsSync(brainJsonPath)) {
+    brainData = JSON.parse(fs.readFileSync(brainJsonPath, 'utf8'))
+  } else if (fs.existsSync(brainIndexPath)) {
+    const content = fs.readFileSync(brainIndexPath, 'utf8')
+    const titleMatch = content.match(/^#\s+(.+)$/m)
+    const descMatch = content.match(/^>\s+(.+)$/m)
+    const createdMatch = content.match(/\*\*Created\*\*:\s*(.+)$/m)
+
+    brainData = {
+      id: crypto.randomUUID(),
+      name: titleMatch ? titleMatch[1] : path.basename(targetPath),
+      description: descMatch ? descMatch[1] : '',
+      created: createdMatch ? createdMatch[1] : new Date().toISOString().split('T')[0],
+      status: 'live'
+    }
+  } else {
+    process.stderr.write(`No brain found at: ${targetPath}\n`)
+    process.stderr.write(`Expected .braintree/brain.json or BRAIN-INDEX.md\n`)
+    process.exit(1)
+  }
+
+  const registryPath = path.join(os.homedir(), '.braintree-os', 'brains.json')
+  ensureConfigDir()
+
+  let config: { brains: any[] } = { brains: [] }
+  if (fs.existsSync(registryPath)) {
+    config = JSON.parse(fs.readFileSync(registryPath, 'utf8'))
+  }
+
+  const existing = config.brains.find((b: any) => b.id === brainData.id)
+  if (existing) {
+    console.log(`Brain already registered: ${brainData.name}`)
+    return
+  }
+
+  config.brains.push({
+    id: brainData.id,
+    name: brainData.name,
+    description: brainData.description,
+    path: targetPath,
+    created: brainData.created,
+    status: brainData.status || 'live'
+  })
+
+  fs.writeFileSync(registryPath, JSON.stringify(config, null, 2) + '\n')
+  console.log(`Registered brain: ${brainData.name}`)
+}
+
 function ensureConfigDir() {
   fs.mkdirSync(CONFIG_DIR, { recursive: true })
   const configFile = path.join(CONFIG_DIR, 'brains.json')
@@ -218,6 +279,7 @@ async function main() {
   if (args[0] === 'now') { console.log(formatNow(args.includes('--short'))); return }
   if (args[0] === 'home') { console.log(os.homedir()); return }
   if (args[0] === 'registry-set') { registrySet(args[1], args[2], args[3]); return }
+  if (args[0] === 'recover-braintree') { recoverBrain(args[1]); return }
 
   if (args.includes('help') || args.includes('--help') || args.includes('-h')) {
     showHelp()
