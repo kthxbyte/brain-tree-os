@@ -8,7 +8,9 @@ import { spawn } from 'node:child_process'
 import * as net from 'node:net'
 
 const CONFIG_DIR = path.join(os.homedir(), '.braintree-os')
-const COMMANDS_DIR = (() => {
+const OPENCODEDIR = 'opencode'
+const OPENCODECMD_DIR = path.join(os.homedir(), '.config', OPENCODEDIR, 'commands')
+const CLAUDE_DIR = (() => {
   const openclaudeDir = path.join(os.homedir(), '.openclaude', 'commands')
   const claudeDir = path.join(os.homedir(), '.claude', 'commands')
   return fs.existsSync(path.join(os.homedir(), '.openclaude')) ? openclaudeDir : claudeDir
@@ -67,17 +69,35 @@ function ensureConfigDir() {
   }
 }
 
-async function installCommands(): Promise<number> {
-  fs.mkdirSync(COMMANDS_DIR, { recursive: true })
-  const commandsSource = path.join(__dirname, '..', 'commands')
-  if (!fs.existsSync(commandsSource)) return 0
+async function installCommands(): Promise<{ claude: number; opencode: number }> {
+  let claudeCount = 0
+  let opencodeCount = 0
 
-  const files = fs.readdirSync(commandsSource).filter(f => f.endsWith('.md'))
-  for (const file of files) {
-    const dest = path.join(COMMANDS_DIR, file)
-    fs.copyFileSync(path.join(commandsSource, file), dest)
+  // Install Claude/OpenClaude commands
+  fs.mkdirSync(CLAUDE_DIR, { recursive: true })
+  const claudeCommandsSource = path.join(__dirname, '..', 'claude', 'commands')
+  if (fs.existsSync(claudeCommandsSource)) {
+    const claudeFiles = fs.readdirSync(claudeCommandsSource).filter(f => f.endsWith('.md'))
+    for (const file of claudeFiles) {
+      const dest = path.join(CLAUDE_DIR, file)
+      fs.copyFileSync(path.join(claudeCommandsSource, file), dest)
+    }
+    claudeCount = claudeFiles.length
   }
-  return files.length
+
+  // Install OpenCode commands
+  fs.mkdirSync(OPENCODECMD_DIR, { recursive: true })
+  const opencodeCommandsSource = path.join(__dirname, '..', 'opencode', 'commands')
+  if (fs.existsSync(opencodeCommandsSource)) {
+    const opencodeFiles = fs.readdirSync(opencodeCommandsSource).filter(f => f.endsWith('.md'))
+    for (const file of opencodeFiles) {
+      const dest = path.join(OPENCODECMD_DIR, file)
+      fs.copyFileSync(path.join(opencodeCommandsSource, file), dest)
+    }
+    opencodeCount = opencodeFiles.length
+  }
+
+  return { claude: claudeCount, opencode: opencodeCount }
 }
 
 async function findFreePort(preferred: number): Promise<number> {
@@ -123,12 +143,17 @@ function cleanupServerConfig() {
   }
 }
 
-function showWelcome(port: number, commandCount: number) {
+function showWelcome(port: number, counts: { claude: number; opencode: number }) {
   const url = `http://localhost:${port}/brains`
   console.log('')
   console.log(`  BrainTree OS v${VERSION}`)
   console.log('')
-  console.log(`  > ${commandCount} commands installed to ${COMMANDS_DIR}`)
+  if (counts.claude > 0) {
+    console.log(`  > ${counts.claude} commands installed to ${CLAUDE_DIR}`)
+  }
+  if (counts.opencode > 0) {
+    console.log(`  > ${counts.opencode} commands installed to ${OPENCODECMD_DIR}`)
+  }
   console.log(`  > Server running at ${url}`)
   console.log('')
   console.log('  +-----------------------------------------------------+')
@@ -212,7 +237,7 @@ async function main() {
   ensureConfigDir()
 
   // Step 2: Install commands
-  const commandCount = await installCommands()
+  const counts = await installCommands()
 
   // Step 3: Find port
   const port = await findFreePort(preferredPort)
@@ -259,7 +284,7 @@ async function main() {
 
   // Wait for server to start, then show welcome and open browser
   setTimeout(() => {
-    showWelcome(port, commandCount)
+    showWelcome(port, counts)
     if (!noOpen) openBrowser(`http://localhost:${port}/brains`)
   }, 2000)
 
