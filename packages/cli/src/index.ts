@@ -10,11 +10,7 @@ import * as net from 'node:net'
 const CONFIG_DIR = path.join(os.homedir(), '.braintree-os')
 const OPENCODEDIR = 'opencode'
 const OPENCODECMD_DIR = path.join(os.homedir(), '.config', OPENCODEDIR, 'commands')
-const CLAUDE_DIR = (() => {
-  const openclaudeDir = path.join(os.homedir(), '.openclaude', 'commands')
-  const claudeDir = path.join(os.homedir(), '.claude', 'commands')
-  return fs.existsSync(path.join(os.homedir(), '.openclaude')) ? openclaudeDir : claudeDir
-})()
+const CLAUDE_DIR = path.join(os.homedir(), '.claude', 'commands')
 const SERVER_JSON = path.join(CONFIG_DIR, 'server.json')
 
 const VERSION = '0.1.0'
