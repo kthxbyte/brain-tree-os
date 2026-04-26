@@ -1,0 +1,20 @@
+{
+  "name": "local-demo",
+  "interface": {
+    "displayName": "Local Demo Plugins"
+  },
+  "plugins": [
+    {
+      "name": "brain-tree-os",
+      "source": {
+        "source": "local",
+        "path": "./plugins/brain-tree-os"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}

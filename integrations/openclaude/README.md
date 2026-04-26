@@ -6,9 +6,34 @@ This folder contains an [OpenClaude](https://github.com/OpenClaude-project/openc
 
 brain-tree-os was originally designed for Claude Code, where commands are distributed as `.md` files installed into the user's `.claude/commands/` directory. OpenClaude uses a different extension model: plugins, where each skill is a `SKILL.md` file bundled in a plugin directory.
 
-To port brain-tree-os to OpenClaude, each of the 8 brain commands was converted into a `SKILL.md` file following OpenClaude's skill format. The internal logic of each command is identical to the original — they still rely on the `brain-tree-os` CLI binary for filesystem operations (`find-brain`, `uuid`, `now`, `home`, etc.) — but the entry point and namespace follow the OpenClaude plugin convention.
+To port brain-tree-os to OpenClaude, each of the 9 brain commands was converted into a `SKILL.md` file following OpenClaude's skill format. The internal logic of each command is identical to the original — they still rely on the `brain-tree-os` CLI binary for filesystem operations (`find-brain`, `uuid`, `now`, `home`, `recover-braintree`, etc.) — but the entry point and namespace follow the OpenClaude plugin convention.
 
-The plugin was validated on Windows using OpenClaude with the DeepSeek provider and the `jan-nano-4b` model, both of which support tool use.
+The plugin was validated specifically against a local Windows 11 OpenClaude setup. Tool use was confirmed with the DeepSeek provider, and earlier testing also worked with `jan-nano-4b`.
+
+## Validation Context
+
+This integration was tested as a local plugin loaded manually from:
+
+`C:\Users\Salvador\brain-tree-os-plugin`
+
+The validated on-disk layout on Windows was:
+
+```
+brain-tree-os-plugin/
+  .claude-plugin/
+  skills/
+    feature-braintree/
+    init-braintree/
+    plan-braintree/
+    recover-braintree/
+    resume-braintree/
+    sprint-braintree/
+    status-braintree/
+    sync-braintree/
+    wrap-up-braintree/
+```
+
+No permanent local install method was found during testing. The working approach was to launch OpenClaude manually with `--plugin-dir`.
 
 ## Plugin Structure
 
@@ -19,6 +44,8 @@ brain-tree-os-plugin/
   skills/
     init-braintree/
       SKILL.md               # /brain-tree-os:init-braintree
+    recover-braintree/
+      SKILL.md               # /brain-tree-os:recover-braintree
     resume-braintree/
       SKILL.md               # /brain-tree-os:resume-braintree
     wrap-up-braintree/
@@ -55,7 +82,7 @@ brain-tree-os-plugin/
    brain-tree-os uuid
    # Should print a valid UUID
    ```
-4. A **provider with tool use support** configured in OpenClaude. DeepSeek works well:
+4. A **provider with tool use support** configured in OpenClaude. DeepSeek is the best-validated provider in this repo's testing:
    ```
    /provider deepseek
    ```
@@ -67,17 +94,21 @@ Pass the plugin directory to OpenClaude at startup using the `--plugin-dir` flag
 
 ```bash
 # Linux / macOS
-openclaude --plugin-dir /path/to/brain-tree-os/openclaude/brain-tree-os-plugin
+openclaude --plugin-dir /path/to/brain-tree-os/integrations/openclaude/brain-tree-os-plugin
 
 # Windows CMD
-openclaude --plugin-dir C:\path\to\brain-tree-os\openclaude\brain-tree-os-plugin
+openclaude --plugin-dir C:\path\to\brain-tree-os\integrations\openclaude\brain-tree-os-plugin
+
+# Windows CMD - validated local setup
+openclaude --plugin-dir "C:\Users\Salvador\brain-tree-os-plugin"
 ```
 
-Once loaded, all 8 skills are available under the `/brain-tree-os:` namespace:
+Once loaded, all 9 skills are available under the `/brain-tree-os:` namespace:
 
 | Command | Description |
 |---|---|
 | `/brain-tree-os:init-braintree` | Create a new brain from scratch |
+| `/brain-tree-os:recover-braintree` | Recover and register a migrated brain so it appears in the viewer |
 | `/brain-tree-os:resume-braintree` | Resume from your last session |
 | `/brain-tree-os:wrap-up-braintree` | End the session with a handoff note |
 | `/brain-tree-os:status-braintree` | View progress dashboard |
@@ -99,6 +130,7 @@ Save it as `openclaude-brain.bat` and run it instead of `openclaude`.
 
 ## Notes
 
-- Skills call `brain-tree-os <subcommand>` via Bash tool use. Your model must support tool use — not all local models do. DeepSeek API and `jan-nano-4b` are confirmed working.
+- Skills call `brain-tree-os <subcommand>` via Bash tool use. Your model must support tool use. DeepSeek API is the most reliable confirmed setup in this project, and `jan-nano-4b` also worked in earlier testing.
 - The plugin does not modify any OpenClaude configuration files; it is loaded transiently via `--plugin-dir`.
+- A proper permanent local install path was not established. Attempts to rely on OpenClaude's local plugin directories or settings were not successful during testing.
 - All brain data is stored locally on your filesystem; nothing is sent to any external service beyond your chosen LLM provider.

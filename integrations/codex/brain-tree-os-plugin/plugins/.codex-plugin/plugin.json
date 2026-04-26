@@ -1,0 +1,36 @@
+{
+  "name": "brain-tree-os",
+  "version": "0.1.0",
+  "description": "BrainTree OS — knowledge management commands for Codex. Provides session resume, wrap-up, status, planning, sprint, sync, init, and feature commands.",
+  "author": {
+    "name": "Salvador Muñoz",
+    "email": "salvador.munoz@gmail.com",
+    "url": "https://github.com/kthxbyte/brain-tree-os"
+  },
+  "homepage": "https://github.com/kthxbyte/brain-tree-os",
+  "repository": "https://github.com/kthxbyte/brain-tree-os",
+  "license": "MIT",
+  "keywords": [
+    "brain-tree-os",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "brain-tree-os",
+    "shortDescription": "BrainTree OS — knowledge management commands for Codex",
+    "longDescription": "BrainTree OS — knowledge management commands for Codex. Provides session resume, wrap-up, status, planning, sprint, sync, init, and feature commands.",
+    "developerName": "Salvador Muñoz",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/kthxbyte/brain-tree-os",
+    "privacyPolicyURL": "https://openai.com/policies/row-privacy-policy/",
+    "termsOfServiceURL": "https://openai.com/policies/row-terms-of-use/",
+    "defaultPrompt": [
+      ""
+    ],
+    "brandColor": "#2563EB"
+  }
+}
