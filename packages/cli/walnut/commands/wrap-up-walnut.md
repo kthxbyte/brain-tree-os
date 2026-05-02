@@ -15,7 +15,9 @@ Run: `brain-tree-os next-handoff-number <brain-root>` — save the result as <NN
 Run: `brain-tree-os now` — save the result as <timestamp>
 
 ## Step 2: Write the handoff
-Create `Handoffs/handoff-<NNN>.md` with these sections:
+IMPORTANT: Use the write tool to create files and the edit tool to modify existing files. Do NOT use bash commands like vim, nano, cat, or touch.
+
+Use the write tool to create `Handoffs/handoff-<NNN>.md` with these sections:
 - First line: `> Part of [[Handoffs]]`
 - `**Date**: <timestamp>`
 - **Summary**: 2-3 sentences of what happened this session

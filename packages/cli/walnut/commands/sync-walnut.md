@@ -16,7 +16,9 @@ Run: `brain-tree-os sync-audit <brain-root>`
 The command returns JSON with: orphan_files, broken_links (source + target), empty_folders, index_mismatches (folder + missing_from_index + broken_in_index).
 
 ## Step 2: Fix automatically
-**Orphans**: For each orphan file, add `> Part of [[FolderName]]` to the file and add a wikilink from the appropriate folder index.
+IMPORTANT: Use the edit tool to modify existing files and the write tool to create new ones. Do NOT use bash commands like vim, nano, cat, or touch.
+
+**Orphans**: For each orphan file, use the edit tool to add `> Part of [[FolderName]]` to the file and add a wikilink from the appropriate folder index.
 **Broken links**: If the target is clearly a renamed file, fix the link. For ambiguous cases, ask the user.
 **Index mismatches**: For each missing_from_index entry, edit the folder index to add the missing wikilink.
 

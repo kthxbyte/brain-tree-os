@@ -19,7 +19,9 @@ Search the brain for files related to the feature topic (grep for key terms).
 Read the execution plan to check if this feature maps to an existing step.
 
 ## Step 3: Create the spec
-Write a feature spec at `<relevant-folder>/Feature-<Name>.md`, starting with `> Part of [[FolderIndex]]`.
+IMPORTANT: Use the write tool to create files and the edit tool to modify existing files. Do NOT use bash commands like vim, nano, cat, or touch.
+
+Use the write tool to create `<relevant-folder>/Feature-<Name>.md`, starting with `> Part of [[FolderIndex]]`.
 Include: Summary, Motivation, Requirements (checklist), Technical Approach, Dependencies, Open Questions.
 Add a wikilink to the spec from the folder index.
 

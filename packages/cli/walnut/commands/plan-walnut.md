@@ -19,8 +19,10 @@ Read the execution plan file for the step's full details.
 Read 2-3 relevant brain files for context (folder index, related specs, BRAIN-INDEX).
 
 ## Step 3: Plan and save
+IMPORTANT: Use the write tool to create files and the edit tool to modify existing files. Do NOT use bash commands like vim, nano, cat, or touch.
+
 Break the step into concrete tasks with effort estimates (S < 1hr / M half-day / L full-day).
-Present as a numbered checklist. Save as `<relevant-folder>/Plan-Step-<N>.md`, starting with `> Part of [[FolderIndex]]`.
+Present as a numbered checklist. Use the write tool to save as `<relevant-folder>/Plan-Step-<N>.md`, starting with `> Part of [[FolderIndex]]`.
 Add a wikilink to it from the folder index.
 Update the execution plan: mark the step as `in_progress`.
 

@@ -28,5 +28,7 @@ Include a buffer slot for unexpected work.
 Ask the user to confirm or adjust.
 
 ## Step 4: Save and close
-Write the sprint plan to `Execution-Plan/Sprint-<date>.md`, starting with `> Part of [[Execution-Plan]]`.
+IMPORTANT: Use the write tool to create files and the edit tool to modify existing files. Do NOT use bash commands like vim, nano, cat, or touch.
+
+Use the write tool to create `Execution-Plan/Sprint-<date>.md`, starting with `> Part of [[Execution-Plan]]`.
 Suggest starting with /walnut:plan-walnut <first-step> for task-level breakdown.
