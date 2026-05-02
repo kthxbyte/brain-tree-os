@@ -59,7 +59,7 @@ function registrySet(brainId: string, key: string, value: string) {
 }
 
 function recoverBrain(scanPath: string) {
-  const targetPath = scanPath || process.cwd()
+  const targetPath = path.resolve(scanPath || process.cwd())
 
   if (!fs.existsSync(targetPath)) {
     process.stderr.write(`Path not found: ${targetPath}\n`)
@@ -334,6 +334,7 @@ function initScaffold(brainRoot: string, brainName: string, uuid: string, folder
     process.exit(1)
   }
 
+  brainRoot = path.resolve(brainRoot)
   const allFolders = [...new Set(['Handoffs', 'Assets', ...folders])]
   const date = new Date().toISOString().split('T')[0]
   const folderLinks = allFolders.map(f => `- [[${f}]]`).join('\n')
