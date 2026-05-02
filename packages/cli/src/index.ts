@@ -347,7 +347,7 @@ function initScaffold(brainRoot: string, brainName: string, uuid: string, folder
     `# ${brainName}\n\n**Created**: ${date}\n\n## Folders\n${folderLinks}\n\n## Root Files\n- [[CLAUDE.md]]\n- [[Execution-Plan]]\n\n## Session Log\n- Session 0: Brain initialized. ${date}\n`)
 
   fs.writeFileSync(path.join(brainRoot, 'CLAUDE.md'),
-    `> Part of [[BRAIN-INDEX]]\n\n# ${brainName} — Agent Instructions\n\n## What Is This Brain?\n[Describe the brain purpose here.]\n\n## Brain Structure\n${folderLinks}\n\n## Conventions\n- Use [[wikilinks]] for all cross-references between notes\n- Update Handoffs/ at the end of every work session\n- Reference [[Execution-Plan]] as the source of truth for build order\n`)
+    `> Part of [[BRAIN-INDEX]]\n\n# ${brainName} — Agent Instructions\n\n## What Is This Brain?\n[Describe the brain purpose here.]\n\n## Brain Structure\n${folderLinks}\n\n## Conventions\n- Use [[wikilinks]] for all cross-references between notes\n- Update Handoffs/ at the end of every work session\n- Reference [[Execution-Plan]] as the source of truth for build order\n- Store all notes, research, and content as .md files. Only use other formats when the file type is inherently non-markdown (scripts, data, images, etc.)\n`)
 
   fs.writeFileSync(path.join(brainRoot, 'Execution-Plan.md'),
     `> Part of [[BRAIN-INDEX]]\n\n# Execution Plan\n\n## Phase 1: Foundation\n\n| Step | Title | Status | Notes |\n|---|---|---|---|\n| 1.1 | Define goals | \`not_started\` | |\n`)
