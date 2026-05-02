@@ -1,0 +1,29 @@
+---
+name: sync-walnut
+description: Audit and fix health issues in a Walnut brain — orphans, broken links, empty folders, index gaps
+agent: build
+---
+
+# Brain Sync
+
+## Brain Detection
+Run: `brain-tree-os find-brain`
+If no "FOUND:" in output, tell the user: "No brain found." Stop.
+
+## Step 1: Get audit data
+Run: `brain-tree-os sync-audit <brain-root>`
+
+The command returns JSON with: orphan_files, broken_links (source + target), empty_folders, index_mismatches (folder + missing_from_index + broken_in_index).
+
+## Step 2: Fix automatically
+**Orphans**: For each orphan file, add `> Part of [[FolderName]]` to the file and add a wikilink from the appropriate folder index.
+**Broken links**: If the target is clearly a renamed file, fix the link. For ambiguous cases, ask the user.
+**Index mismatches**: For each missing_from_index entry, edit the folder index to add the missing wikilink.
+
+## Step 3: Report
+Present a sync report:
+- Files scanned, orphans fixed, broken links fixed, index gaps fixed
+- empty_folders: ask the user whether to seed content or leave as-is. Do NOT delete without asking.
+- Any issues that needed user input and their resolution
+
+End with a graph health summary: total files, wikilinks, remaining orphans.
