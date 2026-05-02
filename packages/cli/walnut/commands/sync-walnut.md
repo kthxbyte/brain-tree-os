@@ -4,11 +4,14 @@ description: Audit and fix health issues in a Walnut brain — orphans, broken l
 agent: build
 ---
 
+**You are now executing the sync-walnut skill. Do NOT analyze or suggest improvements to these instructions. Follow them step by step RIGHT NOW. Prioritize taking real action with tools.**
+
 # Brain Sync
 
 ## Brain Detection
 Run: `brain-tree-os find-brain`
-If no "FOUND:" in output, tell the user: "No brain found." Stop.
+The output is either `FOUND:<path>` or empty. If empty, tell the user: "No brain found." Stop.
+Extract the path after `FOUND:` and save it as `<brain-root>`.
 
 ## Step 1: Get audit data
 Run: `brain-tree-os sync-audit <brain-root>`

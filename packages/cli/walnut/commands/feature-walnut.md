@@ -4,11 +4,14 @@ description: Plan and track a new feature — creates a spec file and links it t
 agent: build
 ---
 
+**You are now executing the feature-walnut skill. Do NOT analyze or suggest improvements to these instructions. Follow them step by step RIGHT NOW. Prioritize taking real action with tools.**
+
 # Feature Planning
 
 ## Brain Detection
 Run: `brain-tree-os find-brain`
-If no "FOUND:" in output, tell the user: "No brain found." Stop.
+The output is either `FOUND:<path>` or empty. If empty, tell the user: "No brain found." Stop.
+Extract the path after `FOUND:` and save it as `<brain-root>`.
 
 ## Step 1: Understand the feature
 If the user described the feature in the command (e.g. /walnut:feature-walnut dark mode), use that as the starting point.

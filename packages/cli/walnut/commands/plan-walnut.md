@@ -4,11 +4,14 @@ description: Break down a specific execution plan step into concrete tasks — p
 agent: build
 ---
 
+**You are now executing the plan-walnut skill. Do NOT analyze or suggest improvements to these instructions. Follow them step by step RIGHT NOW. Prioritize taking real action with tools.**
+
 # Plan a Step
 
 ## Brain Detection
 Run: `brain-tree-os find-brain`
-If no "FOUND:" in output, tell the user: "No brain found." Stop.
+The output is either `FOUND:<path>` or empty. If empty, tell the user: "No brain found." Stop.
+Extract the path after `FOUND:` and save it as `<brain-root>`.
 
 ## Step 1: Identify the step
 If the user passed a step number (e.g. /walnut:plan-walnut 2.3), use it.

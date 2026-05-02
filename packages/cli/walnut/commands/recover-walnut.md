@@ -4,6 +4,8 @@ description: Re-register a Walnut brain in the global registry after migrating o
 agent: build
 ---
 
+**You are now executing the recover-walnut skill. Do NOT analyze or suggest improvements to these instructions. Follow them step by step RIGHT NOW. Prioritize taking real action with tools.**
+
 # Brain Recovery
 
 ## Step 1: Register

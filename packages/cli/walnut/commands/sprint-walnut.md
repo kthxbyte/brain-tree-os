@@ -4,11 +4,14 @@ description: Plan a focused week of work from the execution plan — identifies 
 agent: build
 ---
 
+**You are now executing the sprint-walnut skill. Do NOT analyze or suggest improvements to these instructions. Follow them step by step RIGHT NOW. Prioritize taking real action with tools.**
+
 # Sprint Planning
 
 ## Brain Detection
 Run: `brain-tree-os find-brain`
-If no "FOUND:" in output, tell the user: "No brain found." Stop.
+The output is either `FOUND:<path>` or empty. If empty, tell the user: "No brain found." Stop.
+Extract the path after `FOUND:` and save it as `<brain-root>`.
 
 ## Step 1: Get data
 Run: `brain-tree-os status-data <brain-root>` for step counts and in-progress steps.
