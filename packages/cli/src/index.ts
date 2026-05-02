@@ -15,7 +15,7 @@ const SERVER_JSON = path.join(CONFIG_DIR, 'server.json')
 
 const VERSION = '0.1.0'
 
-function findBrain() {
+function findBrain(hereOnly = false) {
   let dir = process.cwd()
   const root = path.parse(dir).root
   while (dir !== root) {
@@ -27,6 +27,7 @@ function findBrain() {
       console.log(`FOUND:${dir}`)
       return
     }
+    if (hereOnly) break
     const parent = path.dirname(dir)
     if (parent === dir) break
     dir = parent
@@ -540,7 +541,7 @@ function showStatus() {
 async function main() {
   const args = process.argv.slice(2)
 
-  if (args[0] === 'find-brain') { findBrain(); return }
+  if (args[0] === 'find-brain') { findBrain(args.includes('--here')); return }
   if (args[0] === 'uuid') { console.log(crypto.randomUUID()); return }
   if (args[0] === 'now') { console.log(formatNow(args.includes('--short'))); return }
   if (args[0] === 'home') { console.log(os.homedir()); return }

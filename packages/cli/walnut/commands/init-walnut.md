@@ -7,7 +7,7 @@ agent: build
 # Initialize Brain
 
 ## Brain Detection
-Run: `brain-tree-os find-brain`
+Run: `brain-tree-os find-brain --here`
 If output contains "FOUND:", tell the user: "A brain already exists here. Use /walnut:resume-walnut to continue." Stop.
 
 ## Step 1: Ask the user
