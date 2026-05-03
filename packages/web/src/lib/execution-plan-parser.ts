@@ -80,7 +80,7 @@ export function parseExecutionPlan(content: string): ParsedStep[] {
             const title = cells[titleCol]?.trim()
             const status =
               statusCol >= 0 && cells[statusCol]
-                ? cells[statusCol].trim().toLowerCase().replace(/\s+/g, '_')
+                ? cells[statusCol].trim().replace(/`/g, '').toLowerCase().replace(/\s+/g, '_')
                 : 'not_started'
 
             if (stepNum && title && /^\d/.test(stepNum)) {
