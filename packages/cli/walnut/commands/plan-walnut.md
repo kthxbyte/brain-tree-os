@@ -1,6 +1,6 @@
 ---
 name: plan-walnut
-description: Break down a specific execution plan step into concrete tasks — pass a step number or choose from available steps
+description: Break down a specific execution plan step into a machine-executable task spec — run this with Claude, then hand the spec to ministral via /build-walnut
 agent: build
 ---
 
@@ -18,15 +18,70 @@ If the user passed a step number (e.g. /walnut:plan-walnut 2.3), use it.
 Otherwise, run `brain-tree-os status-data <brain-root>`, show in_progress and not_started steps, and ask which step to plan.
 
 ## Step 2: Load context
-Read the execution plan file for the step's full details.
-Read 2-3 relevant brain files for context (folder index, related specs, BRAIN-INDEX).
+Read `<brain-root>/CLAUDE.md` for brain purpose and conventions.
+Read `<brain-root>/Execution-Plan.md` for the full step details.
+Read 2-3 other relevant brain files if they exist (folder indexes, related specs).
 
-## Step 3: Plan and save
-IMPORTANT: Use the write tool to create files and the edit tool to modify existing files. Do NOT use bash commands like vim, nano, cat, or touch.
+## Step 3: Design the implementation
+Think through exactly what needs to be built:
+- Which files need to be created, edited, or deleted
+- What each file's exact content should be
+- What shell commands need to run and in what order
+- What the acceptance criteria are
 
-Break the step into concrete tasks with effort estimates (S < 1hr / M half-day / L full-day).
-Present as a numbered checklist. Use the write tool to save as `<relevant-folder>/Plan-Step-<N>.md`, starting with `> Part of [[FolderIndex]]`.
-Add a wikilink to it from the folder index.
-Update the execution plan: mark the step as `in_progress`.
+Break the work into atomic steps. Each step must be one of:
+- **write** — create a file with exact content
+- **edit** — find an exact string in a file and replace it
+- **bash** — run a shell command
 
-Ask if the user wants to start executing now.
+Keep steps small enough that each one completes in under a minute.
+
+## Step 4: Write the task spec
+Find the next available task number: run `brain-tree-os glob <brain-root>/Tasks/task-*.md`
+If no Tasks folder exists, start at task-001.
+
+Write `<brain-root>/Tasks/task-NNN.md` with this exact structure:
+
+```
+# Task NNN — [Step Title]
+
+**Execution Plan Step**: [e.g. 1.2]
+**Brain**: <brain-root>
+
+## Steps
+
+### 1. [short description]
+**Type**: write
+**Path**: [path relative to brain-root]
+**Content**:
+[exact file content — no placeholders]
+
+### 2. [short description]
+**Type**: edit
+**Path**: [path relative to brain-root]
+**Find**:
+[exact string to find]
+**Replace**:
+[exact replacement string]
+
+### 3. [short description]
+**Type**: bash
+**Run**: [exact command]
+```
+
+Rules for the spec:
+- No placeholders. Every field must be filled with the real value.
+- Paths are relative to the brain root.
+- Content for write steps is the complete file, not a summary.
+- Find strings for edit steps must be unique in the target file.
+- Steps must be ordered so each one can succeed given the previous ones completed.
+
+## Step 5: Update the brain
+Update `<brain-root>/Execution-Plan.md`: mark the step as `in_progress`.
+If a `Tasks/` folder index exists, add a wikilink to the new task spec. If not, create `<brain-root>/Tasks/Tasks.md` with `> Part of [[BRAIN-INDEX]]` and a link to the task.
+
+## Step 6: Hand off to ministral
+Run: `opencode run --model ollama/ministral-3:14b --command "build-walnut" "task-NNN"`
+(replace task-NNN with the actual task ID, e.g. task-002)
+
+This runs ministral headlessly to execute the spec. Wait for it to complete, then tell the user what was built.

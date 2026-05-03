@@ -328,9 +328,9 @@ function nextHandoffNumber(brainRoot: string) {
   console.log(String(count).padStart(3, '0'))
 }
 
-function initScaffold(brainRoot: string, brainName: string, uuid: string, folders: string[]) {
+function initScaffold(brainRoot: string, brainName: string, description: string, uuid: string, folders: string[]) {
   if (!brainRoot || !brainName || !uuid) {
-    process.stderr.write('Usage: brain-tree-os init-scaffold <brain-root> <name> <uuid> [folder1 folder2 ...]\n')
+    process.stderr.write('Usage: brain-tree-os init-scaffold <brain-root> <name> "<description>" <uuid> [folder1 folder2 ...]\n')
     process.exit(1)
   }
 
@@ -341,7 +341,7 @@ function initScaffold(brainRoot: string, brainName: string, uuid: string, folder
 
   fs.mkdirSync(path.join(brainRoot, '.braintree'), { recursive: true })
   fs.writeFileSync(path.join(brainRoot, '.braintree', 'brain.json'), JSON.stringify(
-    { id: uuid, name: brainName, description: '', created: date, version: '1.0.0' }, null, 2) + '\n')
+    { id: uuid, name: brainName, description, created: date, version: '1.0.0' }, null, 2) + '\n')
 
   fs.writeFileSync(path.join(brainRoot, 'BRAIN-INDEX.md'),
     `# ${brainName}\n\n**Created**: ${date}\n\n## Folders\n${folderLinks}\n\n## Root Files\n- [[CLAUDE.md]]\n- [[Execution-Plan]]\n\n## Session Log\n- Session 0: Brain initialized. ${date}\n`)
@@ -376,7 +376,7 @@ function initScaffold(brainRoot: string, brainName: string, uuid: string, folder
     try { config = JSON.parse(fs.readFileSync(registryPath, 'utf8')) } catch { /* ignore */ }
   }
   if (!config.brains.find((b: any) => b.id === uuid)) {
-    config.brains.push({ id: uuid, name: brainName, description: '', path: brainRoot, created: date, status: 'building' })
+    config.brains.push({ id: uuid, name: brainName, description, path: brainRoot, created: date, status: 'building' })
     fs.writeFileSync(registryPath, JSON.stringify(config, null, 2) + '\n')
   }
 
@@ -552,7 +552,7 @@ async function main() {
   if (args[0] === 'status-data') { statusData(args[1] || process.cwd()); return }
   if (args[0] === 'sync-audit') { syncAudit(args[1] || process.cwd()); return }
   if (args[0] === 'next-handoff-number') { nextHandoffNumber(args[1] || process.cwd()); return }
-  if (args[0] === 'init-scaffold') { initScaffold(args[1], args[2], args[3], args.slice(4)); return }
+  if (args[0] === 'init-scaffold') { initScaffold(args[1], args[2], args[3], args[4], args.slice(5)); return }
 
   if (args.includes('help') || args.includes('--help') || args.includes('-h')) {
     showHelp()
