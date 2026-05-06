@@ -84,4 +84,14 @@ If a `Tasks/` folder index exists, add a wikilink to the new task spec. If not, 
 Run: `opencode run --model ollama/ministral-3:14b --command "build-walnut" "task-NNN"`
 (replace task-NNN with the actual task ID, e.g. task-002)
 
-This runs ministral headlessly to execute the spec. Wait for it to complete, then tell the user what was built.
+## Step 7: Audit the output
+After ministral completes, read every file it created or modified.
+
+For each `generate` step, check:
+- Does the code match the spec? Flag any function names, signatures, or variable names that differ from what was specified.
+- Are there undefined variables, missing imports, or obvious runtime errors?
+- Does the implementation cover the edge cases described?
+
+For each `write` step, verify the file was written exactly as specified.
+
+Report findings to the user as a short audit note: what passed, what needs fixing. A generated file that hasn't been audited is a draft, not a deliverable.

@@ -84,15 +84,16 @@ function FrontmatterDisplay({ fm }: { fm: Frontmatter }) {
   );
 }
 
-// Inline markdown: bold, italic, code, wikilinks
+// Inline markdown: bold, italic, code, wikilinks, standard links
 function renderInline(
   text: string,
-  onWikilinkClick: (target: string) => void
+  onWikilinkClick: (target: string) => void,
+  brainId?: string
 ): React.ReactNode[] {
   const tokens: React.ReactNode[] = [];
-  // Regex for: **bold**, *italic*, `code`, [[target|display]], [[target]]
+  // Regex for: **bold**, *italic*, `code`, [[target|display]], [[target]], [text](url)
   const re =
-    /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`([^`]+?)`)|(\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\])/g;
+    /(\*\*(.+?)\*\*)|(\*(.+?)\*)|(`([^`]+?)`)|(\[\[([^\]|]+?)(?:\|([^\]]+?))?\]\])|(\[([^\]]+?)\]\(([^)]+?)\))/g;
   let lastIndex = 0;
   let match: RegExpExecArray | null;
   let key = 0;
@@ -139,6 +140,28 @@ function renderInline(
         >
           {display}
         </button>
+      );
+    } else if (match[10]) {
+      // Markdown link: [text](url)
+      const linkText = match[11];
+      let url = match[12];
+      const isExternal = /^https?:\/\//.test(url);
+      
+      // Rewrite relative non-markdown paths to API URLs
+      if (!isExternal && brainId && !url.endsWith('.md') && !url.startsWith('/api/')) {
+        url = `/api/brain-file/${brainId}?path=${encodeURIComponent(url)}`;
+      }
+      
+      tokens.push(
+        <a
+          key={key++}
+          href={url}
+          target={isExternal ? '_blank' : undefined}
+          rel={isExternal ? 'noopener noreferrer' : undefined}
+          className="text-leaf underline decoration-leaf/30 underline-offset-2 transition-colors hover:text-leaf-hover hover:decoration-leaf-hover/50"
+        >
+          {linkText}
+        </a>
       );
     }
 
@@ -248,9 +271,11 @@ function classifyLine(line: string): MarkdownLine {
 function MarkdownRenderer({
   body,
   onWikilinkClick,
+  brainId,
 }: {
   body: string;
   onWikilinkClick: (target: string) => void;
+  brainId?: string;
 }) {
   const elements = useMemo(() => {
     const lines = body.split('\n');
@@ -272,7 +297,7 @@ function MarkdownRenderer({
               key={key++}
               className="mb-3 mt-6 font-serif text-[24px] font-bold italic text-text first:mt-0"
             >
-              {renderInline(classified.content, onWikilinkClick)}
+              {renderInline(classified.content, onWikilinkClick, brainId)}
             </h1>
           );
           i++;
@@ -284,7 +309,7 @@ function MarkdownRenderer({
               key={key++}
               className="mb-2 mt-5 text-[18px] font-semibold text-text first:mt-0"
             >
-              {renderInline(classified.content, onWikilinkClick)}
+              {renderInline(classified.content, onWikilinkClick, brainId)}
             </h2>
           );
           i++;
@@ -296,7 +321,7 @@ function MarkdownRenderer({
               key={key++}
               className="mb-1.5 mt-4 text-[15px] font-semibold text-text first:mt-0"
             >
-              {renderInline(classified.content, onWikilinkClick)}
+              {renderInline(classified.content, onWikilinkClick, brainId)}
             </h3>
           );
           i++;
@@ -310,7 +335,7 @@ function MarkdownRenderer({
               key={key++}
               className="mb-1 mt-3 text-[14px] font-semibold text-text-secondary first:mt-0"
             >
-              {renderInline(classified.content, onWikilinkClick)}
+              {renderInline(classified.content, onWikilinkClick, brainId)}
             </h4>
           );
           i++;
@@ -337,7 +362,7 @@ function MarkdownRenderer({
               className="my-2 border-l-2 border-leaf/40 pl-3 text-[13px] italic text-text-secondary"
             >
               {bqLines.map((line, j) => (
-                <p key={j}>{renderInline(line, onWikilinkClick)}</p>
+                <p key={j}>{renderInline(line, onWikilinkClick, brainId)}</p>
               ))}
             </blockquote>
           );
@@ -404,7 +429,7 @@ function MarkdownRenderer({
                     <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-text-muted" />
                   )}
                   <span className={item.checked ? 'text-text-muted line-through' : ''}>
-                    {renderInline(item.content, onWikilinkClick)}
+                    {renderInline(item.content, onWikilinkClick, brainId)}
                   </span>
                 </li>
               ))}
@@ -432,7 +457,7 @@ function MarkdownRenderer({
                   <span className="mt-0.5 shrink-0 text-[12px] text-text-muted">
                     {j + 1}.
                   </span>
-                  <span>{renderInline(item.content, onWikilinkClick)}</span>
+                  <span>{renderInline(item.content, onWikilinkClick, brainId)}</span>
                 </li>
               ))}
             </ol>
@@ -470,7 +495,7 @@ function MarkdownRenderer({
                           key={j}
                           className="px-2 py-1 text-left font-semibold text-text-secondary"
                         >
-                          {renderInline(cell, onWikilinkClick)}
+                          {renderInline(cell, onWikilinkClick, brainId)}
                         </th>
                       ))}
                     </tr>
@@ -481,7 +506,7 @@ function MarkdownRenderer({
                     <tr key={j} className="border-b border-border/50">
                       {row.map((cell, k) => (
                         <td key={k} className="px-2 py-1 text-text-secondary">
-                          {renderInline(cell, onWikilinkClick)}
+                          {renderInline(cell, onWikilinkClick, brainId)}
                         </td>
                       ))}
                     </tr>
@@ -505,7 +530,7 @@ function MarkdownRenderer({
           }
           result.push(
             <p key={key++} className="my-1.5 text-[13px] leading-relaxed text-text-secondary">
-              {renderInline(pLines.join(' '), onWikilinkClick)}
+              {renderInline(pLines.join(' '), onWikilinkClick, brainId)}
             </p>
           );
           break;
@@ -700,7 +725,7 @@ export default function FileViewer({
           <div className="mx-auto w-full max-w-3xl px-6 pb-16 pt-6">
             {frontmatter && <FrontmatterDisplay fm={frontmatter} />}
             <div className="prose-sm">
-              <MarkdownRenderer body={body} onWikilinkClick={onWikilinkClick} />
+              <MarkdownRenderer body={body} onWikilinkClick={onWikilinkClick} brainId={brainId} />
             </div>
           </div>
         </div>

@@ -34,6 +34,9 @@ Do not paraphrase. Use the exact strings from the spec.
 **If Type is `bash`**:
 Run the exact command in the Run field using the bash tool.
 
+**If Type is `generate`**:
+Read the Description field carefully. It specifies the functionality, interface, and constraints for a code file. Write a complete, working implementation at the given Path using the write tool. Generate real, runnable code — not pseudocode or placeholders. The Description is the full specification; do not ask for clarification.
+
 After each step: move immediately to the next one. Do not pause, do not summarize, do not ask for confirmation.
 
 ## Step 3: Report completion
